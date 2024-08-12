@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const config = require('./config/config');
 const dbMiddleware = require('./middleware/dbmiddleware');
 
@@ -12,20 +13,32 @@ class App {
     }
 
     middlewares() {
+        this.app.use(cors());
         this.app.use(express.json());
         this.app.use(dbMiddleware);
     }
 
     routes() {
+        this.app.get('/databases', (req, res) => {
+            res.json(config.databases);
+        });
+
         this.app.get('/departments', async (req, res) => {
+            const dbName = req.query.db;
+            if (!dbName) {
+                return res.status(400).json({ error: 'Database name is required.' });
+            }
+
             const query = `
             SELECT
-                d.dept_code AS 'Client Code', d.dept_name AS 'Client Name', if(d.active=1, 'Active', 'Inactive') AS 'Status',
-                s.sec_code AS 'Detachment Code', s.sec_name AS 'Detachment Name'
+                d.dept_code, d.dept_name,
+                s.sec_code, s.sec_name
             FROM 
-                fm_dept d
+                ${dbName}.fm_dept d
             LEFT JOIN 
-                fm_section s ON d.dept_code = s.dept_code
+                ${dbName}.fm_section s ON d.dept_code = s.dept_code
+            WHERE
+                d.active=1
             `;
 
             try {
@@ -34,14 +47,14 @@ class App {
             } catch (err) {
                 res.status(500).json({ error: err.message });
             } finally {
-
+                await req.db.close();
             }
         });
     }
 
     start() {
         this.app.listen(this.port, () => {
-            console.log(`Server is running on port ${this.port}`);
+            console.log(`Server is running on http://localhost:${this.port}/departments`);
         });
     }
 }
