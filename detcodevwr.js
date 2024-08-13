@@ -32,13 +32,14 @@ class App {
             const query = `
             SELECT
                 d.dept_code, d.dept_name,
-                s.sec_code, s.sec_name
+                IFNULL(s.sec_code, 'NA') AS sec_code, IFNULL(s.sec_name, 'NA') AS sec_name
             FROM 
                 ${dbName}.fm_dept d
             LEFT JOIN 
                 ${dbName}.fm_section s ON d.dept_code = s.dept_code
             WHERE
                 d.active=1
+            ORDER BY d.dept_code, s.sec_code
             `;
 
             try {
