@@ -1,3 +1,9 @@
 {
-    "databases": ["mib1_taguig","mib2","mib3","mib4","mibstc"]
+    "databases": [
+        { "label": "MIB 1", "value": "mib1_taguig" },
+        { "label": "MIB 2", "value": "mib2" },
+        { "label": "MIB 3", "value": "mib3" },
+        { "label": "MIB 4", "value": "mib4" },
+        { "label": "MIB STC", "value": "mibstc" }
+    ]
 }
