@@ -1,7 +1,7 @@
 {
-  "name": "dcodeviewer",
-  "version": "1.0.0",
-  "main": "detcodevwr.js",
+  "name": "company-data-portal",
+  "version": "2.0.0",
+  "main": "cdp.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

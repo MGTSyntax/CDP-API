@@ -4,6 +4,7 @@
         { "label": "MIB 2", "value": "mib2" },
         { "label": "MIB 3", "value": "mib3" },
         { "label": "MIB 4", "value": "mib4" },
+        { "label": "MIB SS", "value": "mibss" },
         { "label": "MIB STC", "value": "mibstc" }
     ]
 }
