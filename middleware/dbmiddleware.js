@@ -1,8 +1,13 @@
-const db = require('../database');
+const db = require('../models/database');
 const conf = require('../config/config');
 
 const dbMiddleware = (req, res, next) => {
-    const dbName = req.query.db || conf.dbConfig.database;
+    const dbName = req.body.database || req.query.db || conf.dbConfig.database;
+
+    if (!dbName && req.path !== '/databases'){
+        return res.status(400).json({ error: 'Database not specified.' });
+    }
+
     req.db = new db({
         host: conf.dbConfig.host,
         user: conf.dbConfig.user,

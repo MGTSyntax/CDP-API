@@ -20,6 +20,33 @@ class App {
     }
 
     routes() {
+        // Login API
+        this.app.post('/login', async (req, res) => {
+            const { database, username, password } = req.body;
+
+            if (!database || !username || !password) {
+                return res.status(400).json({ error: 'Database, username, and password are required.'});
+            }
+            const query = `
+            SELECT * FROM ${database}.cdpusers WHERE cdpempno = ? AND cdppassword = ?
+            `;
+
+            try {
+                const results = await req.db.query(query, [username, password]);
+
+                if (results.length > 0) {
+                    
+                    res.json({ success: true, message: 'Login successful' });
+                } else {
+                    res.status(401).json({ success: false, message: 'Invalid cerdentials' });
+                }
+            } catch (err) {
+                res.status(500).json({ error: err.message });
+            } finally {
+                await req.db.close();
+            }
+        });
+
         // Get Databases
         this.app.get('/databases', (req, res) => {
             res.json(config.databases);
