@@ -20,12 +20,18 @@ class App {
     }
 
     routes() {
+
+        // Get Databases
+        this.app.get('/databases', (req, res) => {
+            res.json(config.databases);
+        });
+
         // Login API
         this.app.post('/login', async (req, res) => {
             const { database, username, password } = req.body;
 
             if (!database || !username || !password) {
-                return res.status(400).json({ error: 'Database, username, and password are required.'});
+                return res.status(400).json({ error: 'Database, username, and password are required.' });
             }
             const query = `
             SELECT * FROM ${database}.cdpusers WHERE cdpempno = ? AND cdppassword = ?
@@ -35,8 +41,8 @@ class App {
                 const results = await req.db.query(query, [username, password]);
 
                 if (results.length > 0) {
-                    
-                    res.json({ success: true, message: 'Login successful' });
+                    const user = results[0];
+                    res.json({ success: true, message: 'Login successful', empNo: user.cdpempno });
                 } else {
                     res.status(401).json({ success: false, message: 'Invalid cerdentials' });
                 }
@@ -47,14 +53,53 @@ class App {
             }
         });
 
-        // Get Databases
-        this.app.get('/databases', (req, res) => {
-            res.json(config.databases);
+        this.app.get('/user-info', async (req, res) => {
+            const { db, empNo } = req.query;
+
+            // 👇 Log what the backend is receiving
+            console.log("Received in /user-info:", req.query);
+
+            if (!db || !empNo) {
+                return res.status(400).json({ error: 'Database and employee number are required.' });
+            }
+
+            console.log("Fetching user info for:", { db, empNo });
+
+            const query = `
+            SELECT 
+                ji_empNo, ji_fname, ji_lname, ji_mname, ji_extname
+            FROM 
+                \`${db}\`.trans_basicinfo
+            WHERE
+                ji_empNo = ?
+            `;
+
+            try {
+                const results = await req.db.query(query, [empNo]);
+
+                if (results.length > 0) {
+                    const user = results[0];
+                    res.json({
+                        empNo: user.ji_empNo,
+                        firstName: user.ji_fname,
+                        lastName: user.ji_lname,
+                        middleName: user.ji_mname,
+                        extName: user.ji_extname
+                    });
+                } else {
+                    res.status(404).json({ error: 'User not found.' });
+                }
+            } catch (error) {
+                res.status(500).json({ error: error.message });
+            } finally {
+                await req.db.close();
+            }
         });
 
         // Get and Display Departments and Detachments
         this.app.get('/departments', async (req, res) => {
             const dbName = req.query.db;
+
             if (!dbName) {
                 return res.status(400).json({ error: 'Database name is required.' });
             }
