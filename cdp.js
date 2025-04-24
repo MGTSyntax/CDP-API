@@ -42,7 +42,12 @@ class App {
 
                 if (results.length > 0) {
                     const user = results[0];
-                    res.json({ success: true, message: 'Login successful', empNo: user.cdpempno });
+                    res.json({ 
+                        success: true, 
+                        message: 'Login successful', 
+                        empNo: user.cdpempno, 
+                        userLevel: user.cdpuserlevel 
+                    });
                 } else {
                     res.status(401).json({ success: false, message: 'Invalid cerdentials' });
                 }
@@ -56,14 +61,9 @@ class App {
         this.app.get('/user-info', async (req, res) => {
             const { db, empNo } = req.query;
 
-            // 👇 Log what the backend is receiving
-            console.log("Received in /user-info:", req.query);
-
             if (!db || !empNo) {
                 return res.status(400).json({ error: 'Database and employee number are required.' });
             }
-
-            console.log("Fetching user info for:", { db, empNo });
 
             const query = `
             SELECT 
