@@ -335,3 +335,101 @@
 // </body>
 
 // </html>
+
+        // Login API
+        // this.app.post('/login', async (req, res) => {
+        //     const { database, username, password } = req.body;
+
+        //     if (!database || !username || !password) {
+        //         return res.status(400).json({ error: 'Database, username, and password are required.' });
+        //     }
+        //     const query = `
+        //     SELECT * FROM ${database}.cdpusers WHERE cdpempno = ? AND cdppassword = ?
+        //     `;
+
+        //     try {
+        //         const results = await req.db.query(query, [username, password]);
+
+        //         if (results.length > 0) {
+        //             const user = results[0];
+        //             res.json({ 
+        //                 success: true, 
+        //                 message: 'Login successful', 
+        //                 empNo: user.cdpempno, 
+        //                 view: user.cdpuserlevel === 'user' ? 'profile' : 'dashboard'
+        //             });
+        //         } else {
+        //             res.status(401).json({ success: false, message: 'Invalid cerdentials' });
+        //         }
+        //     } catch (err) {
+        //         res.status(500).json({ error: err.message });
+        //     } finally {
+        //         await req.db.close();
+        //     }
+        // });
+
+        
+        // this.app.get('/user-info', async (req, res) => {
+        //     const { db, empNo } = req.query;
+
+        //     if (!db || !empNo) {
+        //         return res.status(400).json({ error: 'Database and employee number are required.' });
+        //     }
+
+        //     const query = `
+        //     SELECT 
+        //         ji_empNo, ji_fname, ji_lname, ji_mname, ji_extname
+        //     FROM 
+        //         \`${db}\`.trans_basicinfo
+        //     WHERE
+        //         ji_empNo = ?
+        //     `;
+
+        //     try {
+        //         const results = await req.db.query(query, [empNo]);
+
+        //         if (results.length > 0) {
+        //             const user = results[0];
+        //             res.json({
+        //                 empNo: user.ji_empNo,
+        //                 firstName: user.ji_fname,
+        //                 lastName: user.ji_lname,
+        //                 middleName: user.ji_mname,
+        //                 extName: user.ji_extname
+        //             });
+        //         } else {
+        //             res.status(404).json({ error: 'User not found.' });
+        //         }
+        //     } catch (error) {
+        //         res.status(500).json({ error: error.message });
+        //     } finally {
+        //         await req.db.close();
+        //     }
+        // });
+
+        // // Get and Display Employees
+        // this.app.get('/employees', async (req, res) => {
+        //     const dbName = req.query.db;
+        //     if (!dbName) {
+        //         return res.status(400).json({ error: 'Database name is required.' });
+        //     }
+        //     const query = `
+        //     SELECT
+        //         a.ji_empNo, a.ji_lname, a.ji_fname, a.ji_mname, a.ji_extname,
+        //         b.email_add
+        //     FROM
+        //         ${dbName}.trans_basicinfo a
+        //     INNER JOIN
+        //         ${dbName}.trans_emailadd b ON a.ji_empNo = b.ji_empNo
+        //     ORDER BY a.ji_lname
+        //     `;
+
+        //     try {
+        //         const results = await req.db.query(query);
+        //         res.json(results);
+        //     } catch (err) {
+        //         res.status(500).json({ error: err.message });
+        //     } finally {
+        //         await req.db.close();
+        //     }
+        // });

@@ -1,7 +1,8 @@
 const express = require('express');
-const router = express.Router;
-const { fetchEmployeeProfile } = require('../controllers/employeeController');
+const router = express.Router();
+const employeeController = require('../controllers/employeeController');
 
-router.get('/employee-profile', fetchEmployeeProfile);
+router.get('/user-info', employeeController.getUserInfo);
+router.get('/employees', employeeController.getEmployees);
 
 module.exports = router;
