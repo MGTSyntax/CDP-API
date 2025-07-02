@@ -5,6 +5,7 @@ const dbMiddleware = require('./middleware/dbmiddleware');
 
 const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 
 class App {
     constructor() {
@@ -24,6 +25,7 @@ class App {
     routes() {
         this.app.use('/', authRoutes);
         this.app.use('/', employeeRoutes);
+        this.app.use('/', profileRoutes);
 
         // Get databases
         this.app.get('/databases', (req, res) => {

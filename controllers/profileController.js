@@ -4,7 +4,7 @@ const fetchEmployeeProfile = async (req, res) => {
     const { empNo } = req.query;
 
     if (!empNo) {
-        return res.status(400).json({ error: 'Employee number is required.' });
+        return res.status(400).json({ error: 'Database and employee number are required.' });
     }
 
     try {

@@ -1,6 +1,4 @@
-const db = require('../models/database');
-
-async function getEmployeeProfile(empNo) {
+async function getEmployeeProfile(db, empNo) {
     const [basicInfo] = await db.query('SELECT * FROM trans_basicinfo WHERE ji_empNo = ?', [empNo]);
     const [compensationInfo] = await db.query('SELECT * FROM trans_compensation WHERE ji_empNo = ?', [empNo]);
     const [disciplinaryInfo] = await db.query('SELECT * FROM trans_disciplinary WHERE da_empno = ?', [empNo]);
