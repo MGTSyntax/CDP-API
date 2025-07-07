@@ -1,19 +1,29 @@
 const { getEmployeeProfile } = require('../services/profileService');
 
 const fetchEmployeeProfile = async (req, res) => {
-    const { empNo } = req.query;
+    const { db: database, empNo } = req.query;
 
-    if (!empNo) {
+    if (!database || !empNo) {
         return res.status(400).json({ error: 'Database and employee number are required.' });
     }
 
     try {
-        const profile = await getEmployeeProfile(req.db, empNo);
+        const profile = await getEmployeeProfile(req.db, database, empNo);
+
+        if (!profile || Object.keys(profile).length === 0) {
+            return res.status(400).json({ error: 'No profile found'});
+        }
+
         res.json(profile);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error in fetchEmployeeProfile:', err.message);
+        res.status(500).json({ error: 'Failed to fetch employee profile.'});
     } finally {
-        await req.db.close();
+        try {
+            await req.db.close();
+        } catch (closeErr) {
+            console.warn('Failed to close DB connection:', closeErr.message);
+        }
     }
 };
 

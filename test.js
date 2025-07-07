@@ -1,10 +1,14 @@
-// // CDP-API Folder
+// In my API Folder
+
 // // cdp.js
 // const express = require('express');
 // const cors = require('cors');
 // const config = require('./config/config');
 // const dbMiddleware = require('./middleware/dbmiddleware');
-// const res = require('express/lib/response');
+
+// const authRoutes = require('./routes/authRoutes');
+// const employeeRoutes = require('./routes/employeeRoutes');
+// const profileRoutes = require('./routes/profileRoutes');
 
 // class App {
 //     constructor() {
@@ -22,80 +26,13 @@
 //     }
 
 //     routes() {
+//         this.app.use('/', authRoutes);
+//         this.app.use('/', employeeRoutes);
+//         this.app.use('/', profileRoutes);
 
-//         // Get Databases
+//         // Get databases
 //         this.app.get('/databases', (req, res) => {
 //             res.json(config.databases);
-//         });
-
-//         // Login API
-//         this.app.post('/login', async (req, res) => {
-//             const { database, username, password } = req.body;
-
-//             if (!database || !username || !password) {
-//                 return res.status(400).json({ error: 'Database, username, and password are required.' });
-//             }
-//             const query = `
-//             SELECT * FROM ${database}.cdpusers WHERE cdpempno = ? AND cdppassword = ?
-//             `;
-
-//             try {
-//                 const results = await req.db.query(query, [username, password]);
-
-//                 if (results.length > 0) {
-//                     const user = results[0];
-//                     res.json({ success: true, message: 'Login successful', empNo: user.cdpempno });
-//                 } else {
-//                     res.status(401).json({ success: false, message: 'Invalid cerdentials' });
-//                 }
-//             } catch (err) {
-//                 res.status(500).json({ error: err.message });
-//             } finally {
-//                 await req.db.close();
-//             }
-//         });
-
-//         this.app.get('/user-info', async (req, res) => {
-//             const { db, empNo } = req.query;
-
-//             // 👇 Log what the backend is receiving
-//             console.log("Received in /user-info:", req.query);
-
-//             if (!db || !empNo) {
-//                 return res.status(400).json({ error: 'Database and employee number are required.' });
-//             }
-
-//             console.log("Fetching user info for:", { db, empNo });
-
-//             const query = `
-//             SELECT 
-//                 ji_empNo, ji_fname, ji_lname, ji_mname, ji_extname
-//             FROM 
-//                 \`${db}\`.trans_basicinfo
-//             WHERE
-//                 ji_empNo = ?
-//             `;
-
-//             try {
-//                 const results = await req.db.query(query, [empNo]);
-
-//                 if (results.length > 0) {
-//                     const user = results[0];
-//                     res.json({
-//                         empNo: user.ji_empNo,
-//                         firstName: user.ji_fname,
-//                         lastName: user.ji_lname,
-//                         middleName: user.ji_mname,
-//                         extName: user.ji_extname
-//                     });
-//                 } else {
-//                     res.status(404).json({ error: 'User not found.' });
-//                 }
-//             } catch (error) {
-//                 res.status(500).json({ error: error.message });
-//             } finally {
-//                 await req.db.close();
-//             }
 //         });
 //     }
 
@@ -110,10 +47,70 @@
 // const app = new App();
 // app.start();
 
+// // profileRoutes.js
+// const express = require('express');
+// const router = express.Router();
+// const { fetchEmployeeProfile } = require('../controllers/profileController');
 
-// // CDP-UI Folder
+// router.get('/employee-profile', fetchEmployeeProfile);
+
+// module.exports = router;
+
+// // profileService.js
+// async function getEmployeeProfile(db, empNo) {
+//     const [basicInfo] = await db.query('SELECT * FROM trans_basicinfo WHERE ji_empNo = ?', [empNo]);
+//     const [compensationInfo] = await db.query('SELECT * FROM trans_compensation WHERE ji_empNo = ?', [empNo]);
+//     const [disciplinaryInfo] = await db.query('SELECT * FROM trans_disciplinary WHERE da_empno = ?', [empNo]);
+//     const [educInfo] = await db.query('SELECT * FROM trans_educ WHERE ji_empNo = ?', [empNo]);
+//     const [emailaddInfo] = await db.query('SELECT * FROM trans_emailadd WHERE ji_empno = ?', [empNo]);
+//     const [emergencyInfo] = await db.query('SELECT * FROM trans_emergency WHERE ji_empNo = ?', [empNo]);
+//     const [familyInfo] = await db.query('SELECT * FROM trans_family WHERE ji_empNo = ?', [empNo]);
+//     const [jobInfo] = await db.query('SELECT * FROM trans_jobinfo WHERE ji_empNo = ?', [empNo]);
+//     const [pempInfo] = await db.query('SELECT * FROM trans_pemp WHERE ji_empNo = ?', [empNo]);
+//     const [persinfoInfo] = await db.query('SELECT * FROM trans_persinfo WHERE ji_empNo = ?', [empNo]);
+
+//     return {
+//         basicInfo: basicInfo[0],
+//         compensationInfo: compensationInfo[0],
+//         disciplinaryInfo: disciplinaryInfo[0],
+//         educInfo: educInfo[0],
+//         emailaddInfo: emailaddInfo[0],
+//         emergencyInfo: emergencyInfo[0],
+//         basfamilyInfocInfo: familyInfo[0],
+//         jobInfo: jobInfo[0],
+//         pempInfo: pempInfo[0],
+//         persinfoInfo: persinfoInfo[0]
+//     };
+// }
+
+// module.exports = { getEmployeeProfile };
+
+// // profileController.js
+// const { getEmployeeProfile } = require('../services/profileService');
+
+// const fetchEmployeeProfile = async (req, res) => {
+//     const { empNo } = req.query;
+
+//     if (!empNo) {
+//         return res.status(400).json({ error: 'Database and employee number are required.' });
+//     }
+
+//     try {
+//         const profile = await getEmployeeProfile(req.db, empNo);
+//         res.json(profile);
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     } finally {
+//         await req.db.close();
+//     }
+// };
+
+// module.exports = { fetchEmployeeProfile };
+
+// In my UI Folder
 // // api.js
 // // Centralized API Handling
+
 // const API_BASE_URL = 'http://localhost:3100';
 
 // // Fetch Databases
@@ -153,13 +150,43 @@
 // // Get User Info by Employee No.
 // export async function getUserInfo(db, empNo) {
 //     try {
-//         const response = await fetch(`${API_BASE_URL}/user-info?database=${db}&empNo=${empNo}`);
-//         console.log("Fetching user info from:", response);
-//         if (!response.ok) throw new Error('Failed to fetch user info');
-//         return await response.json();
+//         const response = await fetch(`${API_BASE_URL}/user-info?db=${db}&empNo=${empNo}`);
+//         const data = await response.json();
+//         if (!response.ok) {
+//             throw new Error(data.error || 'Failed to fetch user info');
+//         }
+//         return data;
 //     } catch (error) {
 //         console.error('Error fetching user info:', error);
 //         return null;
+//     }
+// }
+
+// // Fetch complete employee profile by employee number
+// export async function getEmpProfile(db, empNo) {
+//     try {
+//         const response = await fetch(`${API_BASE_URL}/employee-profile?db=${db}&empNo=${empNo}`);
+//         const empProfdata = await response.json();
+//         console.error(`empProfdata: ${empProfdata}`);
+//         if (!response.ok) {
+//             throw new Error(empProfdata.error || 'Failed to fetch employee profile');
+//         }
+//         return empProfdata;
+//     } catch (error) {
+//         console.error('Error fetching employee profile:', error);
+//         return null;
+//     }
+// }
+
+// // Fetch Employees
+// export async function getEmployees(selectedDb) {
+//     try {
+//         const response = await fetch(`${API_BASE_URL}/employees?db=${selectedDb}`);
+//         if (!response.ok) throw new Error('Failed to fetch employees');
+//         return await response.json();
+//     } catch (error) {
+//         console.error('Error fetching departments:', error);
+//         return [];
 //     }
 // }
 
@@ -175,261 +202,121 @@
 //     }
 // }
 
-// // CDP-UI Folder
-// // auth.js - Handles login form logic
-// import { getDatabases, loginUser, getUserInfo } from './api.js';
-
-// document.addEventListener('DOMContentLoaded', async () => {
-//     const loginForm = document.querySelector("#loginForm");
-//     const dbSelect = document.querySelector("#database");
-
-//     // Populate databases into the select dropdown
-//     async function populateDatabases() {
-//         const databases = await getDatabases();
-//         if (dbSelect) {
-//             databases.forEach(db => {
-//                 const option = new Option(db.label, db.value);
-//                 dbSelect.appendChild(option);
-//             });
-//         }
-//     }
-//     // Call populateDatabases when the page loads
-//     await populateDatabases();
-
-//     // Handle login form submission
-//     loginForm.addEventListener("submit", async (e) => {
-//         e.preventDefault();
-
-//         const database = dbSelect.value;
-//         const username = document.querySelector("#username").value.trim();
-//         const password = document.querySelector("#password").value.trim();
-
-//         if (!database || !username || !password) {
-//             alert('All fields are required.');
-//             return;
-//         }
-
-//         try {
-//             // Call API to Login User
-//             const result = await loginUser(database, username, password);
-//             console.log("Login result:", result);
-
-//             if (result.success) {
-//                 console.log("Calling getUserInfo with:", database, result.empNo);
-//                 const userInfo = await getUserInfo(database, result.empNo);
-//                 if (userInfo) {
-//                     localStorage.setItem('userInfo', JSON.stringify({
-//                         database,
-//                         empNo: userInfo.empNo,
-//                         firstName: userInfo.firstName,
-//                         lastName: userInfo.lastName,
-//                     }));
-
-//                     alert('Login successful.');
-//                     window.location.href = '/pages/profile.html';
-//                 } else {
-//                     alert('Oh no!');
-//                 }
-//             } else {
-//                 alert('Invalid credentials. Please try again.');
-//             }
-//         } catch (error) {
-//             alert('Login failed: ' + error.message);
-//         }
-//     });
-// });
-
-// // CDP-UI Folder
 // // profile.js - Loads user info and shows in the navbar
+// import { getEmpProfile } from "./api";
+
+// async function loadProfile() {
+//     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+//     if (!userInfo) return;
+
+//     const profile = await getEmpProfile(userInfo.database, userInfo.empNo);
+
+//     if (!profile || !profile.basicInfo) {
+//         console.error('Failed to load profile data.');
+//         return;
+//     }
+
+//     document.getElementById("empNo").textContent = profile.basicInfo?.ji_empNo || '';
+//     document.getElementById("lastName").textContent = profile.basicInfo?.ji_lname || '';
+//     document.getElementById("extName").textContent = profile.basicInfo?.ji_extname || '';
+//     document.getElementById("firstName").textContent = profile.basicInfo?.ji_fname || '';
+//     document.getElementById("middleName").textContent = profile.basicInfo?.ji_mname || '';
+// }
 
 // document.addEventListener('DOMContentLoaded', () => {
 //     const welcomeMessage = document.querySelector('#welcomeMessage');
-
+//     const navMenu = document.getElementById('navMenu');
 //     const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
 //     if (!userInfo) {
 //         console.error("No user data found in local storage.");
+//         window.location.href = '/pages/login.html'; // redirect if not logged in
 //         return;
 //     }
 
-//     console.log("Stored user data:", userInfo);
+//     // Set welcome message
+//     welcomeMessage.textContent = `Hi ${userInfo.firstName}!`;
 
-//     if (userInfo && userInfo.firstName) {
-//         welcomeMessage.textContent = `Hi ${userInfo.firstName}!`;
-//     } else {
-//         welcomeMessage.textContent = 'Dashboard';
+//     // Generate role-based nav
+//     if (navMenu) {
+//         let navHTML = `
+//         <a href="/pages/profile.html">Profile</a>
+//         <a href="/pages/employees.html">Employees</a>
+//         <a href="/pages/detachments.html">Detachments</a>
+//     `;
+
+//     if (userInfo.userLevel === 'admin') {
+//         navHTML = `<a href="/pages/dashboard.html">Dashboard</a>` + navHTML;
 //     }
+
+//     navHTML += `<button id="logoutBtn">Logout</button>`;
+//     navMenu.innerHTML = navHTML;
+
+//     // Attach logout handler after nav built
+//     const logoutBtn = document.getElementById('logoutBtn');
+//     logoutBtn?.addEventListener('click', () => {
+//         localStorage.removeItem('userInfo');
+//         window.location.href = '/pages/login.html';
+//     });
+//     }
+
+//     loadProfile();
 // });
 
-// // Logout Functionality
-// document.querySelector('#logoutBtn').addEventListener('click', () => {
-//     localStorage.removeItem('userInfo');
-//     window.location.href = '/pages/login.html';
-// });
-
-// // CDP-UI Folder
-// // login.html
+// //profile.html
 // <!DOCTYPE html>
 // <html lang="en">
 
 // <head>
 //     <meta charset="UTF-8">
 //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <title>CDP - Login</title>
-//     <link rel="stylesheet" href="/assets/css/styles.css">
-// </head>
-
-// <body>
-//     <div class="login-container">
-//         <h2>Login</h2>
-//         <form id="loginForm">
-//             <label for="database">Select Company:</label>
-//             <select id="database" name="database" required></select>
-
-//             <label for="username">Employee No.:</label>
-//             <input type="text" id="username" name="username" placeholder="Enter Employee No." required>
-
-//             <label for="password">Password</label>
-//             <input type="password" id="password" name="password" placeholder="Enter Password" required>
-
-//             <button type="submit" id="loginBtn">Login</button>
-//         </form>
-//     </div>
-
-//     <script type="module" src="/assets/js/api.js"></script>
-//     <script type="module" src="/assets/js/auth.js"></script>
-//     <script src="/assets/js/footer.js"></script>
-// </body>
-
-// </html>
-
-// // CDP-UI Folder
-// // profile.html
-// <!DOCTYPE html>
-// <html lang="en">
-
-// <head>
-//     <meta charset="UTF-8">
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <title>CDP - Dashboard</title>
+//     <title>CDP - Profile</title>
 //     <link rel="stylesheet" href="/assets/css/styles.css">
 // </head>
 
 // <body>
 //     <header>
-//         <h1 id="welcomeMessage"></h1>
+//         <h1 id="welcomeMessage">Your Profile</h1>
 //     </header>
 
-//     <div class="navmenu">
-//         <a href="/pages/employees.html">Employees</a>
-//         <a href="/pages/detachments.html">Detachments</a>
-//         <button id="logoutBtn">Logout</button>
+//     <div class="layout-container">
+//         <div class="navmenu" id="navMenu">
+//             <a href="/pages/profile.html">Profile</a>
+//             <a href="/pages/employees.html">Employees</a>
+//             <a href="/pages/detachments.html">Detachments</a>
+//             <button id="logoutBtn">Logout</button>
+//         </div>
+
+//         <main>
+//             <section class="profile-card">
+//                 <h2>Basic Information</h2>
+//                 <p><strong>Employee No:</strong> <span id="empNo"></span></p>
+//                 <p><strong>Last Name:</strong> <span id="lastName"></span></p>
+//                 <p><strong>Name Ext.:</strong> <span id="extName"></span></p>
+//                 <p><strong>First Name:</strong> <span id="firstName"></span></p>
+//                 <p><strong>Middle Name:</strong> <span id="middleName"></span></p>
+//             </section>
+//             <section class="profile-card">
+//                 <h2>Personal Information</h2>
+//                 <p><strong>Employee No:</strong> <span id=""></span></p>
+//                 <p><strong>Last Name:</strong> <span id=""></span></p>
+//                 <p><strong>First Name:</strong> <span id=""></span></p>
+//                 <p><strong>Middle Name:</strong> <span id=""></span></p>
+//             </section>
+//             <section class="profile-card">
+//                 <h2>Job Information</h2>
+//                 <p><strong>Employee No:</strong> <span id=""></span></p>
+//                 <p><strong>Last Name:</strong> <span id=""></span></p>
+//                 <p><strong>First Name:</strong> <span id=""></span></p>
+//                 <p><strong>Middle Name:</strong> <span id=""></span></p>
+//             </section>
+//         </main>
 //     </div>
-//     <main></main>
 
 //     <footer id="footer"></footer>
 
 //     <script type="module" src="/assets/js/profile.js"></script>
 //     <script src="/assets/js/footer.js"></script>
-
 // </body>
 
 // </html>
-
-        // Login API
-        // this.app.post('/login', async (req, res) => {
-        //     const { database, username, password } = req.body;
-
-        //     if (!database || !username || !password) {
-        //         return res.status(400).json({ error: 'Database, username, and password are required.' });
-        //     }
-        //     const query = `
-        //     SELECT * FROM ${database}.cdpusers WHERE cdpempno = ? AND cdppassword = ?
-        //     `;
-
-        //     try {
-        //         const results = await req.db.query(query, [username, password]);
-
-        //         if (results.length > 0) {
-        //             const user = results[0];
-        //             res.json({ 
-        //                 success: true, 
-        //                 message: 'Login successful', 
-        //                 empNo: user.cdpempno, 
-        //                 view: user.cdpuserlevel === 'user' ? 'profile' : 'dashboard'
-        //             });
-        //         } else {
-        //             res.status(401).json({ success: false, message: 'Invalid cerdentials' });
-        //         }
-        //     } catch (err) {
-        //         res.status(500).json({ error: err.message });
-        //     } finally {
-        //         await req.db.close();
-        //     }
-        // });
-
-        
-        // this.app.get('/user-info', async (req, res) => {
-        //     const { db, empNo } = req.query;
-
-        //     if (!db || !empNo) {
-        //         return res.status(400).json({ error: 'Database and employee number are required.' });
-        //     }
-
-        //     const query = `
-        //     SELECT 
-        //         ji_empNo, ji_fname, ji_lname, ji_mname, ji_extname
-        //     FROM 
-        //         \`${db}\`.trans_basicinfo
-        //     WHERE
-        //         ji_empNo = ?
-        //     `;
-
-        //     try {
-        //         const results = await req.db.query(query, [empNo]);
-
-        //         if (results.length > 0) {
-        //             const user = results[0];
-        //             res.json({
-        //                 empNo: user.ji_empNo,
-        //                 firstName: user.ji_fname,
-        //                 lastName: user.ji_lname,
-        //                 middleName: user.ji_mname,
-        //                 extName: user.ji_extname
-        //             });
-        //         } else {
-        //             res.status(404).json({ error: 'User not found.' });
-        //         }
-        //     } catch (error) {
-        //         res.status(500).json({ error: error.message });
-        //     } finally {
-        //         await req.db.close();
-        //     }
-        // });
-
-        // // Get and Display Employees
-        // this.app.get('/employees', async (req, res) => {
-        //     const dbName = req.query.db;
-        //     if (!dbName) {
-        //         return res.status(400).json({ error: 'Database name is required.' });
-        //     }
-        //     const query = `
-        //     SELECT
-        //         a.ji_empNo, a.ji_lname, a.ji_fname, a.ji_mname, a.ji_extname,
-        //         b.email_add
-        //     FROM
-        //         ${dbName}.trans_basicinfo a
-        //     INNER JOIN
-        //         ${dbName}.trans_emailadd b ON a.ji_empNo = b.ji_empNo
-        //     ORDER BY a.ji_lname
-        //     `;
-
-        //     try {
-        //         const results = await req.db.query(query);
-        //         res.json(results);
-        //     } catch (err) {
-        //         res.status(500).json({ error: err.message });
-        //     } finally {
-        //         await req.db.close();
-        //     }
-        // });
