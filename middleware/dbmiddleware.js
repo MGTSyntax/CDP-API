@@ -4,7 +4,7 @@ const conf = require('../config/config');
 const dbMiddleware = (req, res, next) => {
     const dbName = req.body.database || req.query.db || conf.dbConfig.database;
 
-    console.log('Connecting to DB:', dbName);
+    // console.log('Connecting to DB:', dbName);
 
     if (!dbName && req.path !== '/databases'){
         return res.status(400).json({ error: 'Database not specified.' });
