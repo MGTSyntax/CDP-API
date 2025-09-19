@@ -1,10 +1,11 @@
+// /config/config.js
 const dotenv = require('dotenv');
 const fs = require('fs');
-const path  = require('path');
+const path = require('path');
 
 dotenv.config();
 
-const dbFilepath = path.join(__dirname,'databases.json');
+const dbFilepath = path.join(__dirname, 'databases.json');
 let databases = [];
 
 try {
@@ -21,5 +22,11 @@ module.exports = {
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD
     },
-    databases: databases
+    databases: databases,
+    fileMetadataDb: {
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: "file_metadata"
+    }
 };

@@ -1,3 +1,4 @@
+// /controllers/profileController.js
 const { getEmployeeProfile } = require('../services/profileService');
 
 const fetchEmployeeProfile = async (req, res) => {

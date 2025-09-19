@@ -1,3 +1,4 @@
+// /services/profileService.js
 async function getEmployeeProfile(db, database, empNo) {
     const queries = [
         ['basicInfo', `SELECT * FROM \`${database}\`.trans_basicinfo WHERE ji_empNo = ?`],
@@ -19,7 +20,7 @@ async function getEmployeeProfile(db, database, empNo) {
             const rows = await db.query(sql, [empNo]);
             result[key] = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
         } catch (error) {
-            console.error(`Error fetching ${key}:`. error.message);
+            console.error(`Error fetching ${key}:`, error.message);
             result[key] = null;
         }
     }

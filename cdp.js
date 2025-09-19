@@ -1,11 +1,14 @@
+// /cdp.js
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const config = require('./config/config');
 const dbMiddleware = require('./middleware/dbmiddleware');
 
 const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const profileRoutes = require('./routes/profileRoutes');
+const fileRoutes = require('./routes/fileRoutes');
 
 class App {
     constructor() {
@@ -19,6 +22,8 @@ class App {
     middlewares() {
         this.app.use(cors());
         this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+        this.app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
         this.app.use(dbMiddleware);
     }
 
@@ -26,6 +31,7 @@ class App {
         this.app.use('/', authRoutes);
         this.app.use('/', employeeRoutes);
         this.app.use('/', profileRoutes);
+        this.app.use('/', fileRoutes);
 
         // Get databases
         this.app.get('/databases', (req, res) => {

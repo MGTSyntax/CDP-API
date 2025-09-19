@@ -1,3 +1,4 @@
+// controllers/employeeController.js
 const employeeService = require('../services/employeeService');
 
 exports.getUserInfo = async (req, res) => {

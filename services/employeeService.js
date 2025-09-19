@@ -1,3 +1,4 @@
+// /services/employeeService.js
 exports.getUserInfo = async (db, database, empNo) => {
     const query = `
             SELECT ji_empNo, ji_fname, ji_lname, ji_mname, ji_extname
@@ -33,6 +34,6 @@ exports.getEmployees = async (db, database) => {
             ORDER BY a.ji_lname
             `;
 
-    const [results] = await db.query(query);
+    const results = await db.query(query);
     return results;
 };
