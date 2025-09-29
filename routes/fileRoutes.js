@@ -2,12 +2,13 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/multerConfig');
+const { checkPermission } = require('../middleware/checkPermission');
 const path = require('path');
 const fs = require("fs");
 const fileDb = require('../models/fileMetadataDb');
 
 // POST /upload
-router.post('/upload', (req, res) => {
+router.post('/upload', checkPermission("upload"), (req, res) => {
     upload.single('document')(req, res, async (err) => {
         if (err) {
             console.error('Multer error:', err);
@@ -63,7 +64,7 @@ router.get("/documents/:department", async (req, res) => {
 });
 
 // DELETE /uploads/:department/:filename
-router.delete("/uploads/:department/:filename", async (req, res) => {
+router.delete("/uploads/:department/:filename", checkPermission("delete"), async (req, res) => {
     const { department, filename } = req.params;
     const filePath = path.join(__dirname, "../uploads", department, filename);
 
