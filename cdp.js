@@ -4,11 +4,11 @@ const cors = require('cors');
 const path = require('path');
 const config = require('./config/config');
 const dbMiddleware = require('./middleware/dbmiddleware');
-
 const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const departmentFolderRoutes= require('./routes/departmentFolderRoutes');
 
 class App {
     constructor() {
@@ -32,6 +32,7 @@ class App {
         this.app.use('/', employeeRoutes);
         this.app.use('/', profileRoutes);
         this.app.use('/', fileRoutes);
+        this.app.use('/', departmentFolderRoutes);
 
         // Get databases
         this.app.get('/databases', (req, res) => {

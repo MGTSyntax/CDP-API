@@ -8,11 +8,11 @@ const permissions = {
     OPERATIONS: ["opsmanager", "superadmin"]
 };
 
-function checkPermission(action, fileDb) {
+function checkPermission(action) {
     return async (req, res, next) => {
-        const department = (req.body.department || req.params.department)?.toUpperCase();
-        const userRole = req.user?.userLevel?.toLowerCase();
-        const empNo = req.user?.empNo;
+        const department = (req.body.department || req.params.department || req.query.department)?.toUpperCase();
+        const userRole = req.user?.userLevel?.toLowerCase() || req.body.userLevel?.toLowerCase();
+        const empNo = req.user?.empNo || req.body.uploadedBy;
 
         if (!department || !userRole) {
             return res.status(400).json({ error: "Invalid request: missing department or user" });
@@ -20,7 +20,6 @@ function checkPermission(action, fileDb) {
 
         const allowedRoles = (permissions[department] || []).map(r => r.toLowerCase());
 
-        // Upload: simple role check
         if (action === "upload") {
             if (!allowedRoles.includes(userRole)) {
                 return res.status(403).json({ error: `You do not have permission to upload in this ${department}` });
@@ -28,11 +27,10 @@ function checkPermission(action, fileDb) {
             return next();
         }
         
-        // Delete: need extra validation
         if (action === "delete") {
             try {
                 const { filename } = req.params;
-                const [file] = await fileDb.query(
+                const [file] = await req.db.query(
                     `SELECT uploaded_by FROM file_metadata.uploaded_files
                     WHERE filename = ? AND department = ? LIMIT 1`,
                     [filename, department]
@@ -49,6 +47,8 @@ function checkPermission(action, fileDb) {
                 ) {
                     return next();
                 }
+
+                return res.status(403).json({ error: "You do not have permission to delete this file" });
             } catch (err) {
                 console.error("Delete permission check failed:", err);
                 return res.status(500).json({ error: "Permission check failed" });

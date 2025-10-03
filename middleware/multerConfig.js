@@ -19,13 +19,14 @@ const storage = multer.diskStorage({
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const ext = path.extname(file.originalname);
         const basename = path.basename(file.originalname, ext);
-        cb(null, `${basename}-${uniqueSuffix}${ext}`);
+        cb(null, `${basename}-${ext}`);
+        // cb(null, `${basename}-${uniqueSuffix}${ext}`);
     }
 });
 
 // File filter
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.txt'];
+    const allowedTypes = ['.pdf', '.png', '.jpg', '.jpeg', '.txt'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowedTypes.includes(ext)) {
         cb(null, true);
