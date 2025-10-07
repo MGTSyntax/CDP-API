@@ -6,14 +6,18 @@ const { checkPermission } = require('../middleware/checkPermission');
 const path = require('path');
 const fs = require("fs");
 const fileDb = require('../models/fileMetadataDb');
-const file_metadata = "file_metadata";
 
-// POST /upload
+const FILE_DB = "file_metadata";
+
+/* ============================
+   UPLOAD FILE
+============================ */
 router.post('/upload', upload.single('document'), checkPermission("upload"), async (req, res) => {
     const file = req.file;
     const department = req.query.department || req.body.department || 'general';
-    const dbName = req.body.dbName || "file_metadata";
+    const dbName = req.body.dbName;
     const uploadedBy = req.body.uploadedBy || "system";
+    const category = req.body.category || req.query.category || null;
 
     if (!file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -21,9 +25,9 @@ router.post('/upload', upload.single('document'), checkPermission("upload"), asy
 
     try {
         await fileDb.query(
-            `INSERT INTO uploaded_files (filename, path, department, uploaded_by, database_name)
-                VALUES (?, ?, ?, ?, ?)`,
-            [file.filename, `/uploads/${department}/${file.filename}`, department, uploadedBy, dbName]
+            `INSERT INTO ${FILE_DB}.uploaded_files (filename, path, department, category, uploaded_by, database_name)
+                VALUES (?, ?, ?, ?, ?, ?)`,
+            [file.filename, `/uploads/${department}/${file.filename}`, department, category, uploadedBy, dbName]
         );
 
         res.status(200).json({
@@ -37,7 +41,9 @@ router.post('/upload', upload.single('document'), checkPermission("upload"), asy
     }
 });
 
-// GET /documents/:department
+/* ============================
+   FETCH DOCUMENTS BY DEPT/CAT
+============================ */
 router.get("/documents/:department", async (req, res) => {
     const { department } = req.params;
     const { category } = req.query;
@@ -45,10 +51,19 @@ router.get("/documents/:department", async (req, res) => {
     try {
         let query = 
             `SELECT id, filename, path, department, uploaded_by, database_name, upload_date 
-            FROM ${file_metadata}.uploaded_files 
+            FROM ${FILE_DB}.uploaded_files 
             WHERE department = ?`
         ;
+        const params = [department];
 
+        if (category) {
+            query += " AND category = ?";
+            params.push(category);
+        }
+
+        query += " ORDER BY upload_date DESC";
+
+        const results = await fileDb.query(query, params);
         res.json(results);
     } catch (err) {
         console.error("DB fetch error:", err);
@@ -56,7 +71,9 @@ router.get("/documents/:department", async (req, res) => {
     }
 });
 
-// DELETE /uploads/:department/:filename
+/* ============================
+   DELETE FILE
+============================ */
 router.delete("/uploads/:department/:filename", express.json(), async (req, res) => {
     try {
         await checkPermission("delete")(req, res, async () => {
@@ -64,11 +81,13 @@ router.delete("/uploads/:department/:filename", express.json(), async (req, res)
             const filePath = path.join(__dirname, "../uploads", department, filename);
 
             if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
+                fs.unlink(filePath, err => {
+                    if (err) console.error("File unlink failed:", err);
+                });
             }
 
             await fileDb.query(
-                `DELETE FROM file_metadata.uploaded_files 
+                `DELETE FROM ${FILE_DB}.uploaded_files 
                 WHERE filename = ? AND department = ?`,
                 [filename, department]
             );

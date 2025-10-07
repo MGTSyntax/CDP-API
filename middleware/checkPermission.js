@@ -1,4 +1,7 @@
 // middleware/checkPermission.js
+const fileDb = require('../models/fileMetadataDb');
+const FILE_DB = "file_metadata";
+
 const permissions = {
     ANL: ["anlmanager", "superadmin"],
     FINANCE: ["finmanager", "superadmin"],
@@ -30,8 +33,8 @@ function checkPermission(action) {
         if (action === "delete") {
             try {
                 const { filename } = req.params;
-                const [file] = await req.db.query(
-                    `SELECT uploaded_by FROM file_metadata.uploaded_files
+                const [file] = await fileDb.query(
+                    `SELECT uploaded_by FROM ${FILE_DB}.uploaded_files
                     WHERE filename = ? AND department = ? LIMIT 1`,
                     [filename, department]
                 );
