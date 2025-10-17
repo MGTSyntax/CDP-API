@@ -1,10 +1,10 @@
 // /services/employeeService.js
-exports.getUserInfo = async (db, database, empNo) => {
+exports.getUserInfo = async (db, empNo) => {
     const query = `
-            SELECT ji_empNo, ji_fname, ji_lname, ji_mname, ji_extname
-            FROM \`${database}\`.trans_basicinfo
-            WHERE ji_empNo = ?
-            `;
+        SELECT ji_empNo, ji_fname, ji_lname, ji_mname, ji_extname
+        FROM trans_basicinfo
+        WHERE ji_empNo = ?
+    `;
 
     const results = await db.query(query, [empNo]);
 
@@ -22,18 +22,19 @@ exports.getUserInfo = async (db, database, empNo) => {
     }
 };
 
-exports.getEmployees = async (db, database) => {
+exports.getEmployees = async (db) => {
     const query = `
-            SELECT
-                a.ji_empNo, a.ji_lname, a.ji_fname, a.ji_mname, a.ji_extname,
-                b.email_add
-            FROM
-                \`${database}\`.trans_basicinfo a
-            INNER JOIN
-                \`${database}\`.trans_emailadd b ON a.ji_empNo = b.ji_empNo
-            ORDER BY a.ji_lname
-            `;
+        SELECT
+            a.ji_empNo, 
+            a.ji_lname, 
+            a.ji_fname, 
+            a.ji_mname, 
+            a.ji_extname,
+            b.email_add
+        FROM trans_basicinfo a
+        INNER JOIN trans_emailadd b ON a.ji_empNo = b.ji_empNo
+        ORDER BY a.ji_lname
+    `;
 
-    const results = await db.query(query);
-    return results;
+    return await db.query(query);
 };

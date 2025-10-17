@@ -5,6 +5,7 @@ const path = require('path');
 const config = require('./config/config');
 const dbMiddleware = require('./middleware/dbmiddleware');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const fileRoutes = require('./routes/fileRoutes');
@@ -29,6 +30,7 @@ class App {
 
     routes() {
         this.app.use('/', authRoutes);
+        this.app.use('/', userRoutes);
         this.app.use('/', employeeRoutes);
         this.app.use('/', profileRoutes);
         this.app.use('/', fileRoutes);
@@ -43,30 +45,24 @@ class App {
         this.app.get('/departments', async (req, res) => {
             const dbName = req.query.db;
 
-            if (!dbName) {
-                return res.status(400).json({ error: 'Database name is required.' });
-            }
+            if (!dbName) return res.status(400).json({ error: 'Database name is required.' });
+            if (!req.branchDb) return res.status(400).json({ error: `No branch database connection for ${dbName}` });
 
             const query = `
             SELECT
                 d.dept_code, d.dept_name,
                 IFNULL(s.sec_code, 'NA') AS sec_code, IFNULL(s.sec_name, 'NA') AS sec_name
-            FROM 
-                ${dbName}.fm_dept d
-            LEFT JOIN 
-                ${dbName}.fm_section s ON d.dept_code = s.dept_code
-            WHERE
-                d.active=1
+            FROM  fm_dept d
+            LEFT JOIN  fm_section s ON d.dept_code = s.dept_code
+            WHERE d.active=1
             ORDER BY d.dept_code, s.sec_code
             `;
 
             try {
-                const results = await req.db.query(query);
+                const results = await req.branchDb.query(query);
                 res.json(results);
             } catch (err) {
                 res.status(500).json({ error: err.message });
-            } finally {
-                await req.db.close();
             }
         });
     }

@@ -5,16 +5,13 @@ const upload = require('../middleware/multerConfig');
 const { checkPermission } = require('../middleware/checkPermission');
 const path = require('path');
 const fs = require("fs");
-const fileDb = require('../models/fileMetadataDb');
-
-const FILE_DB = "file_metadata";
 
 /* ============================
    UPLOAD FILE
 ============================ */
 router.post('/upload', upload.single('document'), checkPermission("upload"), async (req, res) => {
     const file = req.file;
-    const department = req.query.department || req.body.department || 'general';
+    const department = (req.query.department || req.body.department || 'GENERAL').toUpperCase();
     const dbName = req.body.dbName;
     const uploadedBy = req.body.uploadedBy || "system";
     const category = req.body.category || req.query.category || null;
@@ -24,9 +21,20 @@ router.post('/upload', upload.single('document'), checkPermission("upload"), asy
     }
 
     try {
-        await fileDb.query(
-            `INSERT INTO ${FILE_DB}.uploaded_files (filename, path, department, category, uploaded_by, database_name)
-                VALUES (?, ?, ?, ?, ?, ?)`,
+        const [existingFile] = await req.mainDb.query(
+            `SELECT id FROM uploaded_files WHERE filename = ? AND department = ? LIMIT 1`,
+            [file.filename, department]
+        );
+
+        if (existingFile) {
+            return res.status(409).json({
+                error: `A file named "${file.filename}" already exists in the ${department} department.`,
+            });
+        }
+
+        await req.mainDb.query(
+            `INSERT INTO uploaded_files (filename, path, department, category, uploaded_by, database_name)
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [file.filename, `/uploads/${department}/${file.filename}`, department, category, uploadedBy, dbName]
         );
 
@@ -45,13 +53,13 @@ router.post('/upload', upload.single('document'), checkPermission("upload"), asy
    FETCH DOCUMENTS BY DEPT/CAT
 ============================ */
 router.get("/documents/:department", async (req, res) => {
-    const { department } = req.params;
-    const { category } = req.query;
+    const department = req.params.department.toUpperCase();
+    const category = req.query.category || null;
 
     try {
         let query = 
             `SELECT id, filename, path, department, uploaded_by, database_name, upload_date 
-            FROM ${FILE_DB}.uploaded_files 
+            FROM uploaded_files 
             WHERE department = ?`
         ;
         const params = [department];
@@ -63,7 +71,7 @@ router.get("/documents/:department", async (req, res) => {
 
         query += " ORDER BY upload_date DESC";
 
-        const results = await fileDb.query(query, params);
+        const results = await req.mainDb.query(query, params);
         res.json(results);
     } catch (err) {
         console.error("DB fetch error:", err);
@@ -74,30 +82,32 @@ router.get("/documents/:department", async (req, res) => {
 /* ============================
    DELETE FILE
 ============================ */
-router.delete("/uploads/:department/:filename", express.json(), async (req, res) => {
-    try {
-        await checkPermission("delete")(req, res, async () => {
-            const { department, filename } = req.params;
-            const filePath = path.join(__dirname, "../uploads", department, filename);
-
+router.delete(
+    "/uploads/:department/:filename",
+    express.json(),
+    checkPermission("delete"),
+    async (req, res) => {
+        const { department, filename } = req.params;
+        const filePath = path.join(__dirname, "../uploads", department, filename);
+        try {
             if (fs.existsSync(filePath)) {
                 fs.unlink(filePath, err => {
                     if (err) console.error("File unlink failed:", err);
                 });
             }
 
-            await fileDb.query(
-                `DELETE FROM ${FILE_DB}.uploaded_files 
+            await req.mainDb.query(
+                `DELETE FROM uploaded_files 
                 WHERE filename = ? AND department = ?`,
                 [filename, department]
             );
 
             res.json({ message: "File deleted successfully" });
-        });
-    } catch (err) {
-        console.error("Delete error:", err);
-        res.status(500).json({ error: "Failed to delete file" });
+        } catch (err) {
+            console.error("Delete error:", err);
+            res.status(500).json({ error: "Failed to delete file" });
+        }
     }
-});
+);
 
 module.exports = router;

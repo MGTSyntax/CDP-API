@@ -1,18 +1,35 @@
 // /middleware/dbmiddleware.js
-const db = require('../models/database');
-const conf = require('../config/config');
+const Database = require('../models/database');
+const config = require('../config/config');
+
+const poolCache = {};
+
+function getOrCreatePool(dbConfig) {
+    const key = dbConfig.database || 'file_metadata';
+    if (!poolCache[key]) {
+        poolCache[key] = new Database(dbConfig);
+    }
+    return poolCache[key];
+}
 
 const dbMiddleware = (req, res, next) => {
-    const dbName = req.body.database || req.query.db || conf.dbConfig.database;
-    if (!dbName && req.path !== '/databases') {
-        return res.status(400).json({ error: 'Database not specified.' });
+    // always connect to file_metadata
+    req.mainDb = getOrCreatePool(config.fileMetadataDb);
+
+    // optional: detect branch DB (if passed in query/body)
+    const branchDbName =
+        req.query.db ||
+        req.query.dbName ||
+        req.body.db ||
+        req.body.dbName ||
+        req.body.database;
+
+    // attach branch DB pool if specified
+    if (branchDbName) {
+        req.branchDb = getOrCreatePool(config.getBranchConfig(branchDbName));
+    } else {
+        req.branchDb = null;
     }
-    req.db = new db({
-        host: conf.dbConfig.host,
-        user: conf.dbConfig.user,
-        password: conf.dbConfig.password,
-        database: dbName
-    });
 
     next();
 };

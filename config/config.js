@@ -15,18 +15,26 @@ try {
     console.error('Error loading databases from databases.json:', err);
 }
 
+const baseConfig = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
+};
+
 module.exports = {
     port: process.env.PORT || 3100,
-    dbConfig: {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD
-    },
+    dbConfig: baseConfig,
     databases: databases,
+
+    // main database
     fileMetadataDb: {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
+        ...baseConfig,
         database: "file_metadata"
-    }
+    },
+
+    // helper to dynamically create branch DB connection configs
+    getBranchConfig: (dbName) => ({
+        ...baseConfig,
+        database: dbName
+    })
 };

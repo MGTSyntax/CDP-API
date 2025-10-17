@@ -1,27 +1,30 @@
 // middleware/checkPermission.js
-const fileDb = require('../models/fileMetadataDb');
-const FILE_DB = "file_metadata";
-
 const permissions = {
-    ANL: ["anlmanager", "superadmin"],
-    FINANCE: ["finmanager", "superadmin"],
-    HR: ["hrmanager", "superadmin"],
-    IT: ["itmanager", "superadmin"],
-    LEGAL: ["legmanager", "superadmin"],
-    OPERATIONS: ["opsmanager", "superadmin"]
+    ANL: [1, 3],
+    FINANCE: [1, 5],
+    HR: [1, 7],
+    IT: [1, 9],
+    LEGAL: [1, 11],
+    OPERATIONS: [1, 13]
 };
 
 function checkPermission(action) {
     return async (req, res, next) => {
         const department = (req.body.department || req.params.department || req.query.department)?.toUpperCase();
-        const userRole = req.user?.userLevel?.toLowerCase() || req.body.userLevel?.toLowerCase();
+        const userRole = Number(req.user?.userLevel || req.body.userLevel);
         const empNo = req.user?.empNo || req.body.uploadedBy;
 
         if (!department || !userRole) {
             return res.status(400).json({ error: "Invalid request: missing department or user" });
         }
 
-        const allowedRoles = (permissions[department] || []).map(r => r.toLowerCase());
+        if (!permissions[department]) {
+            return res.status(400).json({ error: `Unknown department: ${department}` });
+        }
+
+        if (userRole === 1) return next();
+
+        const allowedRoles = permissions[department].map(Number);
 
         if (action === "upload") {
             if (!allowedRoles.includes(userRole)) {
@@ -33,8 +36,8 @@ function checkPermission(action) {
         if (action === "delete") {
             try {
                 const { filename } = req.params;
-                const [file] = await fileDb.query(
-                    `SELECT uploaded_by FROM ${FILE_DB}.uploaded_files
+                const [file] = await req.mainDb.query(
+                    `SELECT uploaded_by FROM uploaded_files
                     WHERE filename = ? AND department = ? LIMIT 1`,
                     [filename, department]
                 );
@@ -44,7 +47,6 @@ function checkPermission(action) {
                 }
 
                 if (
-                    userRole === "superadmin" || 
                     file.uploaded_by === empNo || 
                     allowedRoles.includes(userRole)
                 ) {

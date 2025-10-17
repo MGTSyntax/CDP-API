@@ -8,35 +8,32 @@ exports.getUserInfo = async (req, res) => {
         return res.status(400).json({ error: 'Database and employee number are required.' });
     }
 
-    try {
-        const userInfo = await employeeService.getUserInfo(req.db, db, empNo);
+    if (!req.branchDb) {
+        return res.status(400).json({ error: `No branch database connection for ${db}` });
+    }
 
-        if (userInfo) {
-            res.json(userInfo);
-        } else {
-            res.status(404).json({ error: 'User not found.' });
-        }
+    try {
+        const userInfo = await employeeService.getUserInfo(req.branchDb, empNo);
+
+        if (userInfo) res.json(userInfo);
+        else res.status(404).json({ error: 'User not found.' });
+
     } catch (err) {
         console.error('Error in getUserInfo:', err.message);
         res.status(500).json({ error: err.message });
-    } finally {
-        await req.db.close();
     }
 };
 
 exports.getEmployees = async (req, res) => {
     const dbName = req.query.db;
 
-    if (!dbName) {
-        return res.status(400).json({ error: 'Database name is required.' });
-    }
+    if (!dbName) return res.status(400).json({ error: 'Database name is required.' });
+    if (!req.branchDb) return res.status(400).json({ error: `No branch database connection for ${dbName}` });
 
     try {
-        const employees = await employeeService.getEmployees(req.db, dbName);
+        const employees = await employeeService.getEmployees(req.branchDb);
         res.json(employees);
     } catch (err) {
         res.status(500).json({ error: err.message });
-    } finally {
-        await req.db.close();
     }
 };
