@@ -1,5 +1,6 @@
 // controllers/employeeController.js
 const employeeService = require('../services/employeeService');
+const { getEmployeeProfile } = require('../services/profileService');
 
 exports.getUserInfo = async (req, res) => {
     const { db, empNo } = req.query;

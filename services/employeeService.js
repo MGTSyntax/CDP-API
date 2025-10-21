@@ -25,15 +25,16 @@ exports.getUserInfo = async (db, empNo) => {
 exports.getEmployees = async (db) => {
     const query = `
         SELECT
-            a.ji_empNo, 
-            a.ji_lname, 
-            a.ji_fname, 
-            a.ji_mname, 
-            a.ji_extname,
-            b.email_add
-        FROM trans_basicinfo a
-        INNER JOIN trans_emailadd b ON a.ji_empNo = b.ji_empNo
-        ORDER BY a.ji_lname
+            bi.ji_empNo, 
+            bi.ji_lname, 
+            bi.ji_fname, 
+            bi.ji_mname, 
+            bi.ji_extname,
+            ji.ji_dept AS assignment,
+            ji.ji_sec AS detachment
+        FROM trans_basicinfo bi
+        INNER JOIN trans_jobinfo ji ON bi.ji_empNo = ji.ji_empNo
+        ORDER BY bi.ji_lname
     `;
 
     return await db.query(query);
