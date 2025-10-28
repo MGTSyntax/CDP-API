@@ -7,7 +7,12 @@ const fs = require('fs');
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const department = req.query.department || req.body.department || "general";
-        const uploadPath = path.join(__dirname, '../uploads', department);
+        const category = req.query.category || req.body.category || "";
+        const baseUploadPath  = path.join(__dirname, '../uploads');
+
+        const uploadPath = category
+            ? path.join(baseUploadPath, department, category)
+            : path.join(baseUploadPath, department);
 
         // Always ensure the folder exists
         fs.mkdir(uploadPath, { recursive: true }, (err) => {
@@ -19,7 +24,7 @@ const storage = multer.diskStorage({
         // const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const ext = path.extname(file.originalname);
         const basename = path.basename(file.originalname, ext);
-        cb(null, `${basename}${ext}`);
+        cb(null, `${basename}-${Date.now()}${ext}`);
         // cb(null, `${basename}-${uniqueSuffix}${ext}`);
     }
 });
@@ -28,16 +33,13 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     const allowedTypes = ['.pdf', '.png', '.jpg', '.jpeg', '.txt'];
     const ext = path.extname(file.originalname).toLowerCase();
-    if (allowedTypes.includes(ext)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Invalid file type'), false);
-    }
+    if (allowedTypes.includes(ext)) cb(null, true);
+    else cb(new Error('Invalid file type'), false);
 };
 
 const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
+    storage,
+    fileFilter,
     limits: { fileSize: 30 * 1024 * 1024 }
 });
 
