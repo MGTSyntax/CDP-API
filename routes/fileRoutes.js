@@ -35,13 +35,24 @@ router.post('/upload', upload.single('document'), checkPermission("upload"), asy
         await req.mainDb.query(
             `INSERT INTO uploaded_files (filename, path, department, category, uploaded_by, database_name)
             VALUES (?, ?, ?, ?, ?, ?)`,
-            [file.filename, `/uploads/${department}/${file.filename}`, department, category, uploadedBy, dbName]
+            [
+                file.filename,
+                category
+                    ? `/uploads/${department}/${category}/${file.filename}`
+                    : `/uploads/${department}/${file.filename}`,
+                department,
+                category,
+                uploadedBy,
+                dbName
+            ]
         );
 
         res.status(200).json({
             message: 'File uploaded successfully',
             filename: file.filename,
-            path: `/uploads/${department}/${file.filename}`
+            path: category
+                ? `/uploads/${department}/${category}/${file.filename}`
+                : `/uploads/${department}/${file.filename}`
         });
     } catch (dbErr) {
         console.error("DB insert error:", dbErr);
@@ -88,18 +99,21 @@ router.delete(
     checkPermission("delete"),
     async (req, res) => {
         const { department, filename } = req.params;
-        const filePath = path.join(__dirname, "../uploads", department, filename);
+        const category = req.query.category || null;
+
+        const filePath = category 
+            ? path.join(__dirname, "../uploads", department, category, filename)
+            : path.join(__dirname, "../uploads", department, filename);
+
         try {
             if (fs.existsSync(filePath)) {
-                fs.unlink(filePath, err => {
-                    if (err) console.error("File unlink failed:", err);
-                });
+                fs.unlinkSync(filePath);
             }
 
             await req.mainDb.query(
                 `DELETE FROM uploaded_files 
-                WHERE filename = ? AND department = ?`,
-                [filename, department]
+                WHERE filename = ? AND department = ? ${category ? "AND category = ?" : ""}`,
+                category ? [filename, department, category] : [filename, department]
             );
 
             res.json({ message: "File deleted successfully" });
