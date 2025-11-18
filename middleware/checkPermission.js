@@ -2,7 +2,7 @@
 const permissions = {
     ANL: [1, 3],
     FINANCE: [1, 5],
-    HR: [1, 7],
+    HR: [1, 6, 7],
     IT: [1, 9],
     LEGAL: [1, 11],
     OPERATIONS: [1, 13]

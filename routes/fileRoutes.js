@@ -61,7 +61,7 @@ router.post('/upload', upload.single('document'), checkPermission("upload"), asy
 });
 
 /* ============================
-   FETCH DOCUMENTS BY DEPT/CAT
+   FETCH DOCUMENTS BY DEPT/CAT (WITH PERMISSIONS)
 ============================ */
 router.get("/documents/:department", async (req, res) => {
     const department = req.params.department.toUpperCase();
@@ -82,8 +82,8 @@ router.get("/documents/:department", async (req, res) => {
 
         query += " ORDER BY upload_date DESC";
 
-        const results = await req.mainDb.query(query, params);
-        res.json(results);
+        const documents = await req.mainDb.query(query, params);
+        res.json(documents);
     } catch (err) {
         console.error("DB fetch error:", err);
         res.status(500).json({ error: "Failed to fetch documents" });
