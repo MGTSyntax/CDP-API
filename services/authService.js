@@ -3,7 +3,7 @@ exports.login = async (mainDb, username, password) => {
     const query = `
         SELECT loginid, username, password, role_id, empno, company_id
         FROM file_metadata.cp_users
-        WHERE username = ? AND password = ?
+        WHERE BINARY username = ? AND BINARY password = ?
         LIMIT 1
     `;
 

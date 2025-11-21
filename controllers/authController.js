@@ -14,7 +14,7 @@ exports.login = async (req, res) => {
         const user = await authService.login(req.mainDb, username, password);
 
         if (!user) {
-            res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
         const roleData = await getUserRoleAndPermissions(req.mainDb, username);
